@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: MobileAPI
+  datasource:
+    url: jdbc:mysql://localhost:3306/tmdt
+    username: root
+    password:
+    driverClassName: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    format-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: mobileapp084@gmail.com
+    password: "omyh rtaj cvdi icos"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - classpath:/public/
+        - classpath:/resources/
+        - classpath:/META-INF/resources/
+        - file:/external/path/
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+
+openapi:
+  service:
+    api-docs: api-service
+    server: http://localhost:8080
+    title: API Service
+    version: 1.0.0
+
+cloudinary:
+  cloud-name: dmdjbuvig
+  api-key: 652981452525434
+  api-secret: pgIYakDqMVAYHy9bo-vdyFl3k1o
+
+
+vnpay:
+  tmn-code: C0LUS1XF
+  hash-secret: MRSUPJYDQQV713GJPX8IVD1XAJIEVVJI
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  return-url: /api/pay/vnpay/return
+  version: 2.1.0
+  command: pay
+  currency-code: VND
+  locale: vn
+  bank-code: NCB
+jwt:
+  issuer: ngoctaiphan
+  audience: ngoctaiphan
+  expiration-minutes: 30
+  keys:
+    private-key: classpath:keys/private_key.pem
+    public-key: classpath:keys/public_key.pem
+
+
