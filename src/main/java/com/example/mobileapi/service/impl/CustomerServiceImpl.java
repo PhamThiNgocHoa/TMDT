@@ -101,8 +101,11 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // Cập nhật thông tin từ DTO
         customerMapper.updateCustomerFromDto(request, customer);
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            customer.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
 
         return customerMapper.toCustomerResponse(customer);
     }
