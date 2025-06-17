@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -32,9 +33,18 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponseDTO saveProduct(ProductRequestDTO dto) {
-        return productMapper.toProductResponseDTO(productRepository.save(productMapper.toProduct(dto)));
+        Product product = productMapper.toProduct(dto);
 
+        // Tính toán giá sau khi áp dụng giảm giá
+        product.calculatePrice();
+
+        // Lưu vào cơ sở dữ liệu
+        Product savedProduct = productRepository.save(product);
+
+        // Trả về đối tượng ProductResponseDTO
+        return productMapper.toProductResponseDTO(savedProduct);
     }
+
 
     @Override
     public ProductResponseDTO updateProduct(Integer id, ProductRequestDTO productRequestDTO) {
@@ -54,11 +64,12 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.toProductResponseDTOList(productRepository.findAll());
     }
 
-    @Override
     public ProductResponseDTO getProductById(Integer id) throws AppException {
-        return productMapper.toProductResponseDTO(productRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND)));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        return productMapper.toProductResponseDTO(product);
     }
+
 
     @Override
     public List<ProductResponseDTO> findByCategoryId(Integer categoryId) {
@@ -80,7 +91,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductResponseDTO> filterProducts(String name, Integer categoryId, Language language, Integer minPrice, Integer maxPrice, BookForm form) {
+    public List<ProductResponseDTO> filterProducts(String name, Integer categoryId, Integer minPrice, Integer maxPrice) {
         Specification<Product> spec = Specification.where(null);
         if (StringUtils.hasText(name)) {
             spec = spec.and(ProductSpecifications
@@ -89,18 +100,20 @@ public class ProductServiceImpl implements ProductService {
         if (categoryId != null) {
             spec = spec.and(ProductSpecifications.hasCategoryId(categoryId));
         }
-        if (language != null) {
-            spec = spec.and(ProductSpecifications.hasLanguage(language));
-        }
-        if (form != null) {
-            spec = spec.and(ProductSpecifications.hasForm(form));
-        }
         if (minPrice != null && maxPrice != null) {
             spec = spec.and(ProductSpecifications.priceBetween(minPrice, maxPrice));
         }
         return productMapper.toProductResponseDTOList(productRepository.findAll(spec));
 
     }
+
+    @Override
+    public List<ProductResponseDTO> getListProductSale() {
+        List<Product> saleProducts = productRepository.findByDiscountIsNotNullAndDiscountNot("");
+        return productMapper.toProductResponseDTOList(saleProducts);
+    }
+
+
 
     public Product getById(int id) {
         return productRepository.findById(id).orElse(null);
@@ -109,4 +122,6 @@ public class ProductServiceImpl implements ProductService {
     public boolean existById(int id) {
         return productRepository.existsById(id);
     }
+
+
 }

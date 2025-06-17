@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}")
-    public ApiResponse<ProductResponseDTO> getCustomer(@PathVariable int productId) throws AppException {
+    public ApiResponse<ProductResponseDTO> getProduct(@PathVariable int productId) throws AppException {
         return ApiResponse.<ProductResponseDTO>builder()
                 .data(productService.getProductById(productId))
                 .build();
@@ -78,4 +79,26 @@ public class ProductController {
                 .data(productService.getProductByName(name))
                 .build();
     }
+
+    @GetMapping("/filter")
+    public ApiResponse<List<ProductResponseDTO>> filterProducts(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId,
+            @RequestParam(value = "minPrice", required = false) Integer minPrice,
+            @RequestParam(value = "maxPrice", required = false) Integer maxPrice) {
+
+        // Gọi service để lọc sản phẩm theo các tham số
+        List<ProductResponseDTO> filteredProducts = productService.filterProducts(name, categoryId, minPrice, maxPrice);
+
+        return ApiResponse.<List<ProductResponseDTO>>builder()
+                .data(filteredProducts)
+                .build();
+    }
+
+    @GetMapping("/sale")
+    public ResponseEntity<List<ProductResponseDTO>> getProductSale() {
+        List<ProductResponseDTO> products = productService.getListProductSale();
+        return ResponseEntity.ok(products);
+    }
+
 }

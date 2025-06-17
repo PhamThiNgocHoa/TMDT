@@ -50,4 +50,12 @@ public class ApiResponse<T> {
                 .message(message)
                 .build();
     }
+
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .code(HttpStatus.SC_OK)
+                .data(data)
+                .build();
+    }
+
 }

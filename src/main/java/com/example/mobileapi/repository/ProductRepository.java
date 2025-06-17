@@ -14,5 +14,16 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     List<Product> findByNameContainingIgnoreCase(String name);
 
     List<Product> findAllByCategoryId(Integer categoryId);
+    // Lấy sản phẩm có discount khác null và khác ""
+    List<Product> findByDiscountIsNotNullAndDiscountNot(String discount);
+
+    // Tìm sản phẩm theo khoảng giá và loại
+    List<Product> findByPriceBetweenAndCategoryId(int minPrice, int maxPrice, Integer categoryId);
+
+    // Tìm sản phẩm theo khoảng giá
+    List<Product> findByPriceBetween(int minPrice, int maxPrice);
+
+
+
 
 }

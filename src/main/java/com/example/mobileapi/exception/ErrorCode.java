@@ -86,6 +86,9 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, 4506, "Sản phẩm không tồn tại."),
     ORDER_DETAIL_NOT_FOUND(HttpStatus.NOT_FOUND, 4507, "Chi tiết đơn hàng không tồn tại."),
     CATEGORY_NOT_FOUND_BY_ID(HttpStatus.NOT_FOUND, 4508, "Không tìm thấy danh mục với ID đã cho."),
+    RATING_NOT_FOUND(HttpStatus.NOT_FOUND, 4162, "Đánh giá không tồn tại."),
+    RATING_UPDATE_EXPIRED(HttpStatus.BAD_REQUEST, 4511, "Thời gian cập nhật đánh giá đã hết hạn. Chỉ có thể cập nhật trong vòng 30 phút sau khi đánh giá được tạo."),
+    INVALID_COMMENT_LENGTH(HttpStatus.BAD_REQUEST, 4145, "Độ dài bình luận không hợp lệ. Phải từ 5 đến 255 ký tự."),
 
     /**
      * ========== LỖI HỆ THỐNG ==========

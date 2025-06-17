@@ -1,19 +1,30 @@
 package com.example.mobileapi.dto.response;
 
+import com.example.mobileapi.entity.ProductColor;
+import jakarta.persistence.Column;
 import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Data
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @Builder
 public class ProductResponseDTO {
-    Integer id;
-    String name;
-    String img;
-    int price;
-    String detail;
-    Integer categoryId;  // ID của danh mục sản phẩm
-    String categoryName;  // Tên của danh mục sản phẩm (ví dụ: Laptop, Màn hình, v.v.)
-    String brand;  // Hãng sản xuất
+
+    private Integer id;
+    private String name;
+    private String img;
+    private int price;
+    private String description;
+    private Integer categoryId;
+    private String categoryName;
+    private Double originalPrice;
+    private String discount;
+    private Boolean inStock;
+    private Boolean productNew;
+    private Boolean hot;
+    private List<ProductColorResponseDTO> productColors;
+    private List<ProductSizeResponseDTO> productSizes;
+    private List<ImageResponse> productImages;
+    private List<ProductSpecificationDTO> productSpecifications;
 }

@@ -47,11 +47,9 @@ public class ProductQueryResolver {
     public List<Product> filteredProducts(
             @Argument String name,
             @Argument Integer categoryId,
-            @Argument Language language,
             @Argument Integer minPrice,
-            @Argument Integer maxPrice,
-            @Argument BookForm form
+            @Argument Integer maxPrice
     ) {
-        return productMapper.toProductList(productService.filterProducts(name, categoryId, language, minPrice, maxPrice, form));
+        return productMapper.toProductList(productService.filterProducts(name, categoryId, minPrice, maxPrice));
     }
 }

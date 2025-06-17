@@ -28,5 +28,12 @@ public class ProductSpecifications {
     public static Specification<Product> priceBetween(Integer minPrice, Integer maxPrice) {
         return (root, query, cb) -> cb.between(root.get("price"), minPrice, maxPrice);
     }
+
+    public static Specification<Product> hasSpecificationName(String specificationName) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.like(criteriaBuilder.lower(root.join("productSpecifications").get("specification").get("name")),
+                    "%" + specificationName.toLowerCase() + "%");
+        };
+    }
 }
 

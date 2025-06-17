@@ -25,6 +25,7 @@ public interface ProductService {
 
     List<ProductResponseDTO> findByNameContainingIgnoreCase(String name);
 
-    List<ProductResponseDTO> filterProducts(String name, Integer categoryId,
-                                            Language language, Integer minPrice, Integer maxPrice, BookForm form);
+    List<ProductResponseDTO> filterProducts(String name, Integer categoryId, Integer minPrice, Integer maxPrice);
+    List<ProductResponseDTO> getListProductSale();
+
 }

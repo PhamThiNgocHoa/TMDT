@@ -11,5 +11,6 @@ public class WebConfig implements WebMvcConfigurer {
         // Cấu hình đường dẫn cho các file tĩnh
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/");
+
     }
 }
