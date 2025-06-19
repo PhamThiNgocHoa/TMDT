@@ -52,10 +52,9 @@ public class AdminController {
     @Operation(summary = "Thêm người dùng")
     @PostMapping("/customer")
     public ApiResponse<CustomerResponseDTO> addCustomer(@RequestBody @Valid CustomerRequestDTO customer) throws AppException {
-
-        adminService.addCustomer(customer);
+        CustomerResponseDTO newCustomer = adminService.addCustomer(customer);
         return ApiResponse.<CustomerResponseDTO>builder()
-                .data(adminService.addCustomer(customer))
+                .data(newCustomer)
                 .build();
     }
 

@@ -108,6 +108,8 @@ public class CustomerServiceImpl implements CustomerService {
             customer.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
+        customerRepository.save(customer);
+
         return customerMapper.toCustomerResponse(customer);
     }
 

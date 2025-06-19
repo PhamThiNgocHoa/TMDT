@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/customer")
@@ -98,6 +100,15 @@ public class CustomerController {
         customerService.changePassword(customerId, dto.getOldPassword(), dto.getNewPassword());
 
         return ApiResponse.success("Đổi mật khẩu thành công");
+    }
+
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "Lấy danh sách toàn bộ người dùng")
+    @GetMapping("/all")
+    public ApiResponse<List<CustomerResponseDTO>> getAllCustomers() {
+        return ApiResponse.<List<CustomerResponseDTO>>builder()
+                .data(customerService.getAllCustomers())
+                .build();
     }
 
 }
