@@ -10,8 +10,8 @@ import lombok.experimental.FieldDefaults;
 public class ProductRequestDTO {
     String name;
     String img;
-    Double originalPrice; // Giá gốc
-    String discount; // Giảm giá (ví dụ "-30%" hoặc "10%")
-    String description; // Mô tả sản phẩm
-    Integer categoryId; // ID danh mục
+    Double originalPrice;
+    String discount;
+    String description;
+    Integer categoryId;
 }

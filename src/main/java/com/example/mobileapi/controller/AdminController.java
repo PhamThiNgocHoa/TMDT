@@ -1,12 +1,9 @@
 package com.example.mobileapi.controller;
 
+import com.example.mobileapi.dto.response.*;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.CustomerRequestDTO;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
-import com.example.mobileapi.dto.response.ApiResponse;
-import com.example.mobileapi.dto.response.CustomerResponseDTO;
-import com.example.mobileapi.dto.response.MonthlyRevenueResponse;
-import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.exception.AppException;
 import com.example.mobileapi.service.AdminService;
 import com.example.mobileapi.service.OrderService;
@@ -20,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -81,6 +79,34 @@ public class AdminController {
 
         return ApiResponse.<List<MonthlyRevenueResponse>>builder()
                 .data(orderService.getMonthlyRevenue())
+                .build();
+    }
+
+    @GetMapping("/order/revenue/{month}/{year}")
+    @Operation(summary = "Lấy doanh thu theo tháng và nămi")
+    public ApiResponse<RevenueResponse> getOrderRevenueAtYear(
+            @PathVariable("month") int month, @PathVariable("year") int year) {
+
+        return ApiResponse.<RevenueResponse>builder()
+                .data(orderService.getRevenueByMonth(month, year))
+                .build();
+    }
+
+    @GetMapping("/order/revenue/year/{year}")
+    @Operation(summary = "Lấy doanh thu theo năm")
+    public ApiResponse<RevenueResponse> getOrderRevenueAtYear(@PathVariable("year") int year) {
+
+        return ApiResponse.<RevenueResponse>builder()
+                .data(orderService.getRevenueByYear(year))
+                .build();
+    }
+
+    @GetMapping("/order/revenue/date/{date}")
+    @Operation(summary = "Lấy doanh thu theo ngày")
+    public ApiResponse<RevenueResponse> getOrderRevenueAtYear(@PathVariable("date") LocalDate date) {
+
+        return ApiResponse.<RevenueResponse>builder()
+                .data(orderService.getRevenueByDate(date))
                 .build();
     }
 

@@ -47,6 +47,8 @@ public enum ErrorCode {
 
     WRONG_OLD_PASSWORD(HttpStatus.BAD_REQUEST, 4117, "Mật khẩu cũ không chính xác."),
     WRONG_PASSWORD(HttpStatus.BAD_REQUEST, 4118, "Mật khẩu không chính xác."),
+    INVALID_TIME(HttpStatus.BAD_REQUEST, 4148, "Thời gian không hợp lệ."),
+
 
     ERROR_DURING_SEND_EMAIL(HttpStatus.INTERNAL_SERVER_ERROR, 4119, "Lỗi trong quá trình gửi email."),
 
