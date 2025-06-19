@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +35,8 @@ public class CartItemServiceImpl implements CartItemService {
 
 
         // Tìm CartItem dựa trên cartId và productId
-        CartItem existingCartItem = cartItemRepository.findByCartIdAndProductId(cartId, productId);
+        CartItem existingCartItem = cartItemRepository
+                .findByCartIdAndProductIdAndColor(cartId, productId, cartItem.getColor());
 
         if (existingCartItem != null) {
             // Nếu sản phẩm đã tồn tại trong giỏ hàng, cập nhật số lượng sản phẩm
@@ -47,6 +49,7 @@ public class CartItemServiceImpl implements CartItemService {
                     .cart(cartServiceImpl.getByCartId(cartId))
                     .quantity(cartItem.getQuantity())
                     .product(productServiceImpl.getById(productId))
+                    .color(cartItem.getColor())
                     .build();
             return cartItemRepository.save(newCartItem).getId();
         }
@@ -74,16 +77,15 @@ public class CartItemServiceImpl implements CartItemService {
         cartItemRepository.save(cartI);
     }
 
-    @Override
-    public void updateCartItemQuantity(int cartItemId, int quantity) {
+    public void updateCartItemQuantity(int cartItemId, int newQuantity) {
         CartItem cartI = getByCartId(cartItemId);
-        cartI.setQuantity(cartI.getQuantity() + quantity);
-        if (cartI.getQuantity() <= 0) {
+
+        if (newQuantity <= 0) {
             cartItemRepository.delete(cartI);
         } else {
+            cartI.setQuantity(newQuantity);
             cartItemRepository.save(cartI);
         }
-
     }
 
     @Override

@@ -32,5 +32,9 @@ public class CartItem {
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
+    @Column(name = "color", nullable = true)
+    private String color;
+
+
 
 }

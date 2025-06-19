@@ -13,8 +13,8 @@ import java.util.List;
 public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
     List<CartItem> findByCartId(int cartId);
 
-    @Query("SELECT ci FROM CartItem ci WHERE ci.cart.id = :cartId AND ci.product.id = :productId")
-    CartItem findByCartIdAndProductId(@Param("cartId") int cartId, @Param("productId") int productId);
+    @Query("SELECT ci FROM CartItem ci WHERE ci.cart.id = :cartId AND ci.product.id = :productId AND ci.color = :color")
+    CartItem findByCartIdAndProductIdAndColor(@Param("cartId") int cartId, @Param("productId") int productId, @Param("color") String color);
 
     @Transactional
     @Modifying

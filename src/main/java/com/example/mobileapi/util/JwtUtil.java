@@ -51,7 +51,7 @@ public final class JwtUtil {
                     .issuer(jwtProps.issuer())
                     .subject(user.getUsername())
                     .issueTime(Date.from(now))
-                    .expirationTime(Date.from(now.plus(jwtProps.expirationMinutes(), ChronoUnit.MINUTES)))
+                    .expirationTime(Date.from(now.plus(7, ChronoUnit.DAYS)))
                     .jwtID(UUID.randomUUID().toString())
                     .claim("scope", Role.role(user.isRole()))
                     .build();

@@ -1,5 +1,6 @@
 package com.example.mobileapi.service;
 
+import com.example.mobileapi.dto.response.RevenueResponse;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
 import com.example.mobileapi.dto.request.OrderRequestDTO;
@@ -7,6 +8,7 @@ import com.example.mobileapi.dto.response.MonthlyRevenueResponse;
 import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.exception.AppException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface OrderService {
@@ -33,4 +35,11 @@ public interface OrderService {
     List<OrderResponseDTO> getOrdersByStatusAndCustomerId(OrderStatus status, int customerId);
 
     boolean existById(Integer orderId);
+
+    RevenueResponse getRevenueByMonth(int month, int year);
+
+    RevenueResponse getRevenueByYear(int year);
+
+    RevenueResponse getRevenueByDate(LocalDate date);
+
 }

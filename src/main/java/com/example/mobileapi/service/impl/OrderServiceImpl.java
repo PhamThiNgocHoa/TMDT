@@ -1,5 +1,6 @@
 package com.example.mobileapi.service.impl;
 
+import com.example.mobileapi.dto.response.RevenueResponse;
 import com.example.mobileapi.entity.enums.OrderMethod;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
@@ -24,11 +25,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.example.mobileapi.entity.enums.OrderStatus.DELIVERED;
 
 @Service
 @Slf4j
@@ -186,6 +190,72 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public boolean existById(Integer orderId) {
         return orderRepository.existsById(orderId);
+    }
+
+    @Override
+    public RevenueResponse getRevenueByMonth(int month, int year) {
+        if (month < 1 || month > 12 || year < 2000 || year > LocalDate.now().getYear()) {
+            throw new AppException(ErrorCode.INVALID_TIME);
+        }
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+        BigDecimal revenue = orderRepository.findAllByOrderDateBetween(startDateTime, endDateTime).stream()
+                .filter(o -> o.getStatus() == DELIVERED)
+                .map(o -> BigDecimal.valueOf(o.getTotalAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return RevenueResponse.builder()
+                .month(month)
+                .year(year)
+                .revenue(revenue)
+                .build();
+    }
+
+
+    @Override
+    public RevenueResponse getRevenueByYear(int year) {
+        if (year < 2000 || year > LocalDate.now().getYear()) {
+            throw new AppException(ErrorCode.INVALID_TIME);
+        }
+
+        LocalDateTime startOfYear = LocalDate.of(year, 1, 1).atStartOfDay();
+        LocalDateTime endOfYear = LocalDate.of(year, 12, 31).atTime(23, 59, 59);
+
+        BigDecimal revenue = orderRepository.findAllByOrderDateBetween(startOfYear, endOfYear).stream()
+                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
+                .map(o -> BigDecimal.valueOf(o.getTotalAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return RevenueResponse.builder()
+                .year(year)
+                .revenue(revenue)
+                .build();
+    }
+
+
+    @Override
+    public RevenueResponse getRevenueByDate(LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay(); // 00:00:00
+        LocalDateTime endOfDay = date.atTime(23, 59, 59); // 23:59:59
+
+        List<Order> orders = orderRepository.findAllByOrderDateBetween(startOfDay, endOfDay);
+
+        BigDecimal revenue = orders.stream()
+                .filter(o -> o.getStatus() == DELIVERED)
+                .map(o -> BigDecimal.valueOf(o.getTotalAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return RevenueResponse.builder()
+                .day(date.getDayOfMonth())
+                .month(date.getMonthValue())
+                .year(date.getYear())
+                .revenue(revenue)
+                .build();
     }
 
 
