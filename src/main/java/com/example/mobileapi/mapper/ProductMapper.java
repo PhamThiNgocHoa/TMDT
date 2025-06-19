@@ -26,7 +26,9 @@ public interface ProductMapper {
     @Mapping(target = "discount", source = "discount")
     @Mapping(target = "inStock", source = "inStock")
     @Mapping(target = "hot", source = "hot")
+    @Mapping(target = "featured", source = "featured")
     @Mapping(source = "productNew", target = "productNew")
+    @Mapping(target = "type", source = "type")
     ProductResponseDTO toProductResponseDTO(Product product);
 
 
@@ -34,7 +36,6 @@ public interface ProductMapper {
 
     List<Product> toProductList(List<ProductResponseDTO> dtos);
 
-    // Ánh xạ từ ProductSpecification sang ProductSpecificationDTO
     @Mapping(source = "specification.id", target = "specificationId")
     @Mapping(source = "specification.name", target = "specificationName")
     ProductSpecificationDTO toProductSpecificationDTO(ProductSpecification productSpecification);

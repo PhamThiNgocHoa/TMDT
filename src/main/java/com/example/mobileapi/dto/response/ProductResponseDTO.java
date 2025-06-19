@@ -23,6 +23,8 @@ public class ProductResponseDTO {
     private Boolean inStock;
     private Boolean productNew;
     private Boolean hot;
+    private Boolean featured;
+    private String type;
     private List<ProductColorResponseDTO> productColors;
     private List<ProductSizeResponseDTO> productSizes;
     private List<ImageResponse> productImages;

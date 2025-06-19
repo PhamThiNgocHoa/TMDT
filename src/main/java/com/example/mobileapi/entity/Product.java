@@ -55,6 +55,10 @@ public class Product {
     @Column(nullable = true)
     String type;  // Loại sản phẩm
 
+    @Column(nullable = true)
+    Boolean featured; // Sản phẩm tiêu biểu
+
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<ProductColor> productColors = new ArrayList<>();
 
