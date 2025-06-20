@@ -9,6 +9,7 @@ import com.example.mobileapi.exception.AppException;
 import com.example.mobileapi.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/order")
@@ -28,8 +30,8 @@ public class OrderController {
 
     @Operation(summary = "Lưu đơn hàng")
     @PostMapping
-    public ApiResponse<Integer> createOrder(@RequestParam OrderMethod method,
-                                            @RequestBody OrderRequestDTO orderRequestDTO) throws AppException {
+    public ApiResponse<Integer> createOrder(
+            @RequestParam OrderMethod method, @Valid @RequestBody OrderRequestDTO orderRequestDTO) throws AppException {
         orderRequestDTO.setPaymentMethod(method);
 
         return ApiResponse.<Integer>builder()

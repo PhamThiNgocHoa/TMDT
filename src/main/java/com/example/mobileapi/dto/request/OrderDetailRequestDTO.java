@@ -6,4 +6,6 @@ import lombok.Data;
 public class OrderDetailRequestDTO {
     private Integer productId;
     private Integer quantity;
+    private String color;
+
 }

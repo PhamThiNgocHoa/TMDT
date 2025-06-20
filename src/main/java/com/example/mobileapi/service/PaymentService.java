@@ -1,16 +1,20 @@
 package com.example.mobileapi.service;
-
 import com.example.mobileapi.dto.response.PaymentResponse;
-import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.exception.AppException;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
+import java.util.UUID;
+
 
 public interface PaymentService {
-    PaymentResponse createVNPayPayment(Integer orderId, Long price) throws AppException;
 
+    PaymentResponse createVNPayPayment(int orderId, String returnUrl) throws AppException;
 
-    boolean notifyOrder(String vnp_ResponseCode, String vnp_TxnRef, String vnp_TransactionNo, String vnp_TransactionDate, String vnp_Amount);
-
+    boolean notifyOrder(
+            String vnpResponseCode,
+            String vnpTransactionStatus,
+            int orderId,
+            String vnpTransactionNo,
+            String vnpTransactionDate,
+            String vnpAmount);
 }
+

@@ -1,5 +1,6 @@
 package com.example.mobileapi.dto.response;
 
+import com.example.mobileapi.entity.enums.OrderMethod;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,10 +16,12 @@ public class OrderResponseDTO {
     Integer id;
     CustomerResponseDTO customerDTO;
     LocalDateTime orderDate;
-    Integer totalAmount;
+    Double totalAmount;
     String address;
     String numberPhone;
     OrderStatus status;
     String receiver;
     List<OrderDetailResponseDTO> orderDetails;
+    OrderMethod paymentMethod;
+
 }

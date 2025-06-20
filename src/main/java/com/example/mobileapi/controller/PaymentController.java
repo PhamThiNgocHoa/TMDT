@@ -1,70 +1,52 @@
 package com.example.mobileapi.controller;
-
-import com.example.mobileapi.dto.response.ApiResponse;
+import com.example.mobileapi.dto.request.CreatePaymentRequest;
 import com.example.mobileapi.dto.response.PaymentResponse;
 import com.example.mobileapi.service.PaymentService;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.websocket.server.PathParam;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.time.LocalDateTime;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-@Validated
 @Tag(name = "Payment", description = "Payment API")
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    PaymentService paymentService;
 
-    @PostMapping("/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<PaymentResponse> createPayment(
-            @PathParam("price") Long price, @PathParam("orderId") Integer orderId
-    ) throws UnsupportedEncodingException {
-
-        var resp = paymentService.createVNPayPayment(orderId, price);
-        return ApiResponse.<PaymentResponse>builder()
-                .data(resp)
-                .message("Payment URL generated")
-                .build();
+    @PostMapping("/create/{orderId}")
+    public ResponseEntity<PaymentResponse> createPayment(
+            @PathVariable int orderId, @RequestBody CreatePaymentRequest request) {
+        String returnUrl = request.getReturnUrl();
+        PaymentResponse response = paymentService.createVNPayPayment(orderId, returnUrl);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/notify")
-    public ApiResponse<?> notifyOrder(HttpServletResponse response,
-                                      @RequestParam String vnp_Amount,
-                                      @RequestParam String vnp_BankCode,
-                                      @RequestParam(required = false) String vnp_BankTranNo,
-                                      @RequestParam String vnp_CardType,
-                                      @RequestParam String vnp_OrderInfo,
-                                      @RequestParam String vnp_PayDate,
-                                      @RequestParam String vnp_ResponseCode,
-                                      @RequestParam String vnp_TmnCode,
-                                      @RequestParam String vnp_TransactionNo,
-                                      @RequestParam String vnp_TransactionStatus,
-                                      @RequestParam String vnp_TxnRef,
-                                      @RequestParam String vnp_SecureHash
-    ) {
+    @GetMapping("/vnpay-return")
+    public ResponseEntity<String> vnpayReturnHandler(
+            @RequestParam("vnp_ResponseCode") String responseCode,
+            @RequestParam("vnp_TransactionStatus") String transactionStatus,
+            @RequestParam("vnp_TxnRef") String orderIdStr,
+            @RequestParam("vnp_TransactionNo") String transactionNo,
+            @RequestParam("vnp_PayDate") String transactionDate,
+            @RequestParam("vnp_Amount") String amount) {
+        try {
+            int orderId = Integer.parseInt(orderIdStr);
 
-        // Gọi service với các tham số cần thiết
-        boolean isSuccess = paymentService.notifyOrder(
-                vnp_ResponseCode,
-                vnp_TxnRef,
-                vnp_TransactionNo,
-                vnp_PayDate,
-                vnp_Amount
-        );
+            boolean result = paymentService.notifyOrder(
+                    responseCode, transactionStatus, orderId, transactionNo, transactionDate, amount);
 
-        return ApiResponse.<String>builder()
-                .message(isSuccess ? "Thanh toán thành công" : "Thanh toán thất bại")
-                .build();
+            return result
+                    ? ResponseEntity.ok("Payment success")
+                    : ResponseEntity.badRequest().body("Payment failed");
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("Invalid order ID format");
+        }
     }
 }
+

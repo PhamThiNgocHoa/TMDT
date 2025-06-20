@@ -9,18 +9,22 @@ import com.example.mobileapi.dto.request.OrderDetailRequestDTO;
 import com.example.mobileapi.dto.response.MonthlyRevenueResponse;
 import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.dto.response.OrderDetailResponseDTO;
+import com.example.mobileapi.entity.enums.StockAction;
+import com.example.mobileapi.event.StockUpdateEvent;
 import com.example.mobileapi.exception.AppException;
 import com.example.mobileapi.exception.ErrorCode;
 import com.example.mobileapi.entity.Order;
 import com.example.mobileapi.entity.OrderDetail;
 import com.example.mobileapi.mapper.OrderMapper;
 import com.example.mobileapi.mapper.ProductMapper;
+import com.example.mobileapi.repository.CartItemRepository;
 import com.example.mobileapi.repository.OrderRepository;
 import com.example.mobileapi.repository.CustomerRepository;
 import com.example.mobileapi.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +34,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.mobileapi.entity.enums.OrderStatus.DELIVERED;
@@ -43,17 +48,22 @@ public class OrderServiceImpl implements OrderService {
     CustomerRepository customerRepository;
     CustomerServiceImpl customerServiceImpl;
     ProductServiceImpl productService;
+    CartItemRepository cartItemRepository;
     private final ProductMapper productMapper;
     private final OrderMapper orderMapper;
+    ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @PreAuthorize("@customerServiceImpl.getCustomerIdByUsername(authentication.name) == #orderRequestDTO.customerId")
     public int saveOrder(OrderRequestDTO orderRequestDTO) throws AppException {
+        // 👉 Tính tổng tiền từ orderDetails
+        Double totalAmount = calcTotalAmount(orderRequestDTO.getOrderDetails());
 
         Order order = Order.builder()
-                .customer(customerRepository.findById(orderRequestDTO.getCustomerId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)))
+                .customer(customerRepository.findById(orderRequestDTO.getCustomerId())
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)))
                 .orderDate(LocalDateTime.now())
-                .totalAmount(orderRequestDTO.getTotalAmount())
+                .totalAmount(totalAmount) // Gán tổng tiền đã tính
                 .address(orderRequestDTO.getAddress())
                 .numberPhone(orderRequestDTO.getNumberPhone())
                 .receiver(orderRequestDTO.getReceiver())
@@ -66,8 +76,30 @@ public class OrderServiceImpl implements OrderService {
 
         order.getOrderDetails().forEach(orderDetail -> orderDetail.setOrder(order));
 
-        return orderRepository.save(order).getId();
+        int orderId = orderRepository.save(order).getId();
+
+        cartItemRepository.deleteByCustomerId(orderRequestDTO.getCustomerId());
+
+        return orderId;
     }
+
+    public Double calcTotalAmount(List<OrderDetailRequestDTO> orderDetails) {
+        BigDecimal totalAmount = orderDetails.stream()
+                .map(detail -> {
+                    applicationEventPublisher.publishEvent(new StockUpdateEvent(
+                            this, detail.getProductId(), detail.getQuantity(), StockAction.DECREASE));
+
+                    BigDecimal price = BigDecimal.valueOf(productService.getPriceById(detail.getProductId()));
+                    log.info("Product ID: {}, Price: {}", detail.getProductId(), price);
+
+                    return price.multiply(BigDecimal.valueOf(detail.getQuantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        log.info("Tổng tiền đơn hàng (không giảm giá): {}", totalAmount);
+        return totalAmount.doubleValue(); // ✅ Chuyển về Double
+    }
+
 
     public OrderStatus determineDefaultStatus(OrderMethod method) {
         switch (method) {
@@ -97,6 +129,12 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(int orderId) {
         orderRepository.deleteById(orderId);
     }
+
+    @Override
+    public BigDecimal getPriceByOrderId(int orderId) {
+        return orderRepository.findTotalAmountByOrderId(orderId);
+    }
+
 
     @Override
     public void updateOrder(int id, OrderRequestDTO orderRequestDTO) {
@@ -283,12 +321,13 @@ public class OrderServiceImpl implements OrderService {
                 .id(order.getId())
                 .customerDTO(customerServiceImpl.getCustomer(order.getCustomer().getId()))
                 .orderDate(order.getOrderDate())
-                .totalAmount(order.getTotalAmount()) // Ensure this matches your field in OrderResponseDTO
+                .totalAmount(order.getTotalAmount())
                 .address(order.getAddress())
                 .numberPhone(order.getNumberPhone())
                 .status(order.getStatus())
                 .receiver(order.getReceiver())
                 .orderDetails(orderDetailDTOs)
+                .paymentMethod(order.getPaymentMethod())
                 .build();
     }
 
@@ -306,6 +345,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderDetail.builder()
                 .product(productService.getById(dto.getProductId()))
                 .quantity(dto.getQuantity())
+                .color(dto.getColor())
                 .build();
     }
 }

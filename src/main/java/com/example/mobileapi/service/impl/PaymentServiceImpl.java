@@ -1,7 +1,8 @@
 package com.example.mobileapi.service.impl;
-
 import com.example.mobileapi.config.props.VnPayProperties;
+import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.dto.response.PaymentResponse;
+import com.example.mobileapi.entity.enums.OrderMethod;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.exception.AppException;
 import com.example.mobileapi.exception.ErrorCode;
@@ -11,110 +12,166 @@ import com.example.mobileapi.service.TransactionService;
 import com.example.mobileapi.util.VnPayUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Delegate;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentServiceImpl implements PaymentService {
+    @Delegate
     OrderService orderService;
     VnPayProperties vnPayProperties;
     VnPayUtil vnPayUtil;
     TransactionService transactionService;
 
     @Override
-    public PaymentResponse createVNPayPayment(Integer orderId, Long price) throws AppException {
+    public PaymentResponse createVNPayPayment(int orderId, String returnUrl) throws AppException {
+        OrderResponseDTO order = orderService.getOrder(orderId);
+        validateOrder(order);
 
-        if (!orderService.existById(orderId)) {
-            throw new AppException(ErrorCode.ORDER_NOT_FOUND);
-        }
+        BigDecimal price = orderService.getPriceByOrderId(orderId);
+        log.info("Đơn hàng: {}, giá: {}", orderId, price);
 
         String orderType = "other";
-        Long amount = price;
         String bankCode = vnPayProperties.bankCode();
+        String vnpTxnRef = String.valueOf(orderId);
+        String vnpIpAddr = vnPayUtil.getClientIpAddress();
 
-        String vnp_TxnRef = String.valueOf(orderId);
-        String vnp_IpAddr = vnPayUtil.getClientIpAddress();
+        Map<String, String> vnpParams = new HashMap<>();
+        vnpParams.put("vnp_Version", vnPayProperties.version());
+        vnpParams.put("vnp_Command", vnPayProperties.command());
+        vnpParams.put("vnp_TmnCode", vnPayProperties.tmnCode());
 
-
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnPayProperties.version());
-        vnp_Params.put("vnp_Command", vnPayProperties.command());
-        vnp_Params.put("vnp_TmnCode", vnPayProperties.tmnCode());
-        vnp_Params.put("vnp_Amount", String.valueOf(amount));
-        vnp_Params.put("vnp_CurrCode", vnPayProperties.currencyCode());
+        BigDecimal amount = price.movePointRight(2);
+        vnpParams.put("vnp_Amount", amount.setScale(0, RoundingMode.UNNECESSARY).toPlainString());
+        vnpParams.put("vnp_CurrCode", vnPayProperties.currencyCode());
 
         if (bankCode != null && !bankCode.isEmpty()) {
-            vnp_Params.put("vnp_BankCode", bankCode);
+            vnpParams.put("vnp_BankCode", bankCode);
         }
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", orderType);
 
-        vnp_Params.put("vnp_Locale", vnPayProperties.locale());
-        vnp_Params.put("vnp_ReturnUrl", vnPayProperties.returnUrl());
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+        vnpParams.put("vnp_TxnRef", vnpTxnRef);
+        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang " + vnpTxnRef);
+
+
+        vnpParams.put("vnp_OrderType", orderType);
+        vnpParams.put("vnp_Locale", vnPayProperties.locale());
+
+        vnpParams.put("vnp_ReturnUrl", returnUrl);
+
+        vnpParams.put("vnp_IpAddr", vnpIpAddr);
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-
+        vnpParams.put("vnp_CreateDate", formatter.format(cld.getTime()));
         cld.add(Calendar.MINUTE, 15);
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+        vnpParams.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
-        List fieldNames = new ArrayList(vnp_Params.keySet());
+        List<String> fieldNames = new ArrayList<>(vnpParams.keySet());
         Collections.sort(fieldNames);
+
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
-                //Build hash data
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                //Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+
+        for (Iterator<String> itr = fieldNames.iterator(); itr.hasNext(); ) {
+            String fieldName = itr.next();
+            String fieldValue = vnpParams.get(fieldName);
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8))
+                        .append('=')
+                        .append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
                 if (itr.hasNext()) {
-                    query.append('&');
                     hashData.append('&');
+                    query.append('&');
                 }
             }
         }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = vnPayUtil.hmacSHA512(vnPayProperties.hashSecret(), hashData.toString());
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        String paymentUrl = vnPayProperties.payUrl() + "?" + queryUrl;
-        return PaymentResponse.builder()
-                .url(paymentUrl)
-                .build();
+
+        String vnpSecureHash = vnPayUtil.hmacSHA512(vnPayProperties.hashSecret(), hashData.toString());
+        query.append("&vnp_SecureHash=").append(vnpSecureHash);
+
+        String paymentUrl = vnPayProperties.payUrl() + "?" + query;
+        return PaymentResponse.builder().url(paymentUrl).build();
     }
+
+    private void validateOrder(OrderResponseDTO order) {
+        if (order == null) {
+            log.error("Order is null");
+            throw new AppException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        log.info("Order ID: {}", order.getId()); // log thêm ID đơn hàng
+        log.info("Order status: {}", order.getStatus());
+        log.info("Order payment method (raw): {}", order.getPaymentMethod());
+
+        if (!OrderStatus.PENDING_PAYMENT.equals(order.getStatus())) {
+            log.error("Invalid order status: expected PENDING_PAYMENT but got {}", order.getStatus());
+            throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
+        }
+
+        if (!(order.getPaymentMethod().equals(OrderMethod.VN_PAY))) {
+            log.error("Invalid payment method: expected 'VN_PAY' but got '{}'", order.getPaymentMethod());
+            throw new AppException(ErrorCode.INVALID_PAYMENT_METHOD);
+        }
+
+        log.info("Order is valid with payment method: {}", order.getPaymentMethod());
+    }
+
 
 
     @Override
-    public boolean notifyOrder(String vnp_ResponseCode, String vnp_TxnRef, String vnp_TransactionNo, String vnp_TransactionDate, String vnp_Amount) {
-        if (vnp_ResponseCode.equals("00")) {
-            orderService.changeOrderStatus(Integer.parseInt(vnp_TxnRef), OrderStatus.PAYMENT_SUCCESS);
-            transactionService.createTransaction(vnp_TransactionNo, vnp_TxnRef, vnp_ResponseCode, vnp_TransactionDate, vnp_Amount);
-            return true;
-        } else {
-            transactionService.createTransaction(vnp_TransactionNo, vnp_TxnRef, vnp_ResponseCode, vnp_TransactionDate, vnp_Amount);
-            orderService.changeOrderStatus(Integer.parseInt(vnp_TxnRef), OrderStatus.PAYMENT_FAILED);
+    public boolean notifyOrder(
+            String vnpResponseCode,
+            String vnpTransactionStatus,
+            int orderId,
+            String vnpTransactionNo,
+            String vnpTransactionDate,
+            String vnpAmount) {
+        try {
+            // Nếu orderId là int, ta cần convert nó sang String trước khi dùng trong UUID.nameUUIDFromBytes
+            String orderIdStr = String.valueOf(orderId);
+
+            // Sinh transactionId từ UUID name (từ orderId dạng String)
+            UUID transactionUUID = UUID.nameUUIDFromBytes(orderIdStr.getBytes(StandardCharsets.UTF_8));
+            String transactionId = transactionUUID.toString();
+
+            boolean isSuccess = "00".equals(vnpTransactionStatus);
+            OrderStatus newStatus = isSuccess ? OrderStatus.PAYMENT_SUCCESS : OrderStatus.PAYMENT_FAILED;
+
+            orderService.changeOrderStatus(orderId, newStatus);
+
+            transactionService.createTransaction(
+                    transactionId,
+                    orderId, // dùng int luôn, không cần ép kiểu
+                    vnpResponseCode,
+                    vnpTransactionDate,
+                    vnpAmount
+            );
+
+            log.info(
+                    "VNPay call: orderId={}, status={}, txnNo={}, amount={}",
+                    orderId,
+                    newStatus,
+                    vnpTransactionNo,
+                    vnpAmount);
+
+            return isSuccess;
+        } catch (Exception e) {
+            log.error("notifyOrder error", e);
             return false;
         }
     }
-
 
 }

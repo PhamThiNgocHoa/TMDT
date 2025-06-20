@@ -1,15 +1,36 @@
 package com.example.mobileapi.entity.enums;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
-import lombok.Getter;
-
-@Getter
 public enum OrderStatus {
-    PENDING_PAYMENT,
     PENDING,
+    PENDING_PAYMENT,
     SHIPPING,
-    DELIVERED,
-    CANCELLED,
+    CARRIER_CANCELLED,
     PAYMENT_SUCCESS,
-    PAYMENT_FAILED;
+    PAYMENT_FAILED,
+    DELIVERED,
+    CANCELLED;
 
+    private Set<OrderStatus> nextStatus;
+
+    static {
+        PENDING.nextStatus = EnumSet.of(SHIPPING, PENDING_PAYMENT, CANCELLED);
+        PENDING_PAYMENT.nextStatus = EnumSet.of(PAYMENT_SUCCESS, PAYMENT_FAILED, CANCELLED);
+        SHIPPING.nextStatus = EnumSet.of(DELIVERED, CARRIER_CANCELLED);
+        CARRIER_CANCELLED.nextStatus = EnumSet.of(CANCELLED);
+        PAYMENT_SUCCESS.nextStatus = EnumSet.of(SHIPPING, DELIVERED, CANCELLED);
+        PAYMENT_FAILED.nextStatus = EnumSet.of(PENDING_PAYMENT, CANCELLED);
+        DELIVERED.nextStatus = EnumSet.noneOf(OrderStatus.class);
+        CANCELLED.nextStatus = EnumSet.noneOf(OrderStatus.class);
+    }
+
+    public boolean canChangeTo(OrderStatus next) {
+        return nextStatus.contains(next);
+    }
+
+    public Set<OrderStatus> nextStatus() {
+        return Collections.unmodifiableSet(nextStatus);
+    }
 }

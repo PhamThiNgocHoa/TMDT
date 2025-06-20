@@ -31,6 +31,9 @@ public class OrderDetail {
 
     private Integer quantity;
 
+    @Column(name = "color", nullable = true)
+    private String color;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

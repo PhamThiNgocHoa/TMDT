@@ -8,8 +8,10 @@ import com.example.mobileapi.dto.response.MonthlyRevenueResponse;
 import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.exception.AppException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public interface OrderService {
     int saveOrder(OrderRequestDTO orderRequestDTO) throws AppException;
@@ -17,6 +19,8 @@ public interface OrderService {
     OrderResponseDTO getOrder(int orderId);
 
     void deleteOrder(int orderId);
+
+    BigDecimal getPriceByOrderId(int orderId);
 
     void updateOrder(int id, OrderRequestDTO orderRequestDTO);
 

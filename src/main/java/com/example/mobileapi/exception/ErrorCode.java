@@ -40,6 +40,9 @@ public enum ErrorCode {
     MISSING_PHONE(HttpStatus.BAD_REQUEST, 4111, "Số điện thoại không được để trống."),
     INVALID_PHONE(HttpStatus.BAD_REQUEST, 4112, "Số điện thoại không hợp lệ."),
     INVALID_BIRTHDATE(HttpStatus.BAD_REQUEST, 4113, "Ngày sinh không hợp lệ."),
+    INVALID_ORDER_STATUS(HttpStatus.BAD_REQUEST, 4156, "Trạng thái đơn hàng không hợp lệ."),
+    INVALID_PAYMENT_METHOD(
+            HttpStatus.BAD_REQUEST, 4157, "Phương thức thanh toán không hợp lệ."),
     EMAIL_EXISTED(HttpStatus.BAD_REQUEST, 4114, "Email đã tồn tại."),
     INVALID_RESET_CODE(HttpStatus.BAD_REQUEST, 4115, "Mã xác nhận không hợp lệ hoặc đã hết hạn."),
 

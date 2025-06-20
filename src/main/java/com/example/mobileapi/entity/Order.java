@@ -34,7 +34,7 @@ public class Order {
     LocalDateTime orderDate;
 
     @Column(name = "total_amount", nullable = false)
-    Integer totalAmount; // Đảm bảo rằng tên trường này trùng khớp với tên trong cơ sở dữ liệu
+    Double totalAmount;
 
     String address;
 
