@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
@@ -29,6 +31,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             "ORDER BY\n" +
             "    months.Month;", nativeQuery = true)
     List<Object[]> getMonthlyRevenue();
+
+    @Query("SELECT o.totalAmount FROM Order o WHERE o.id = ?1")
+    BigDecimal findTotalAmountByOrderId(int orderId);
 
 
     List<Order> findByStatusAndCustomerId(OrderStatus status, Integer customer_id);

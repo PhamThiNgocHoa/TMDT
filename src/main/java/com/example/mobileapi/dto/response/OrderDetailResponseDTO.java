@@ -18,4 +18,6 @@ public class OrderDetailResponseDTO {
     Integer orderId;
     ProductResponseDTO productResponseDTO;
     Integer quantity;
+    String color;
+
 }

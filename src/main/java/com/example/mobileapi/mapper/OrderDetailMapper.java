@@ -14,6 +14,7 @@ public interface OrderDetailMapper {
 
     @Mapping(source = "order.id", target = "orderId")
     @Mapping(source = "product", target = "productResponseDTO")
+    @Mapping(source = "color", target = "color")
     OrderDetailResponseDTO toOrderDetailResponseDTO(OrderDetail orderDetail);
 
     List<OrderDetailResponseDTO> toOrderDetailResponseDTOList(List<OrderDetail> orderDetails);

@@ -18,7 +18,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,6 +114,17 @@ public class ProductServiceImpl implements ProductService {
         List<Product> saleProducts = productRepository.findByDiscountIsNotNullAndDiscountNot("");
         return productMapper.toProductResponseDTOList(saleProducts);
     }
+
+
+    public Double getPriceById(int id) {
+        Product product = getById(id);
+        if (product == null) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        return (product.getPrice());
+    }
+
 
 
 

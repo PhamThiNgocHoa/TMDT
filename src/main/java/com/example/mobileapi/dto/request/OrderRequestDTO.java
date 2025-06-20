@@ -15,7 +15,8 @@ import java.util.List;
 public class OrderRequestDTO {
     Integer id;
     Integer customerId;//id khách hàng
-    Integer totalAmount;//tổng tiền
+    @Hidden
+    Double totalAmount;//tổng tiền
     String address;//địa chỉ
     String numberPhone;//số điện thoại
     @Hidden
