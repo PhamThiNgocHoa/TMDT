@@ -1,6 +1,8 @@
 package com.example.mobileapi.service.impl;
 
+import com.example.mobileapi.dto.ProductCustomizationDTO;
 import com.example.mobileapi.dto.response.RevenueResponse;
+import com.example.mobileapi.entity.ProductCustomization;
 import com.example.mobileapi.entity.enums.OrderMethod;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
@@ -56,7 +58,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize("@customerServiceImpl.getCustomerIdByUsername(authentication.name) == #orderRequestDTO.customerId")
     public int saveOrder(OrderRequestDTO orderRequestDTO) throws AppException {
-        // 👉 Tính tổng tiền từ orderDetails
         Double totalAmount = calcTotalAmount(orderRequestDTO.getOrderDetails());
 
         Order order = Order.builder()
@@ -342,10 +343,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderDetail convertToOrderDetailEntity(OrderDetailRequestDTO dto) {
-        return OrderDetail.builder()
+        OrderDetail.OrderDetailBuilder builder = OrderDetail.builder()
                 .product(productService.getById(dto.getProductId()))
                 .quantity(dto.getQuantity())
-                .color(dto.getColor())
+                .color(dto.getColor());
+
+        if (dto.getCustomization() != null) {
+            builder.customization(convertToCustomization(dto.getCustomization()));
+        }
+
+        return builder.build();
+    }
+    private ProductCustomization convertToCustomization(ProductCustomizationDTO dto) {
+        return ProductCustomization.builder()
+                .location(dto.getLocation())
+                .height(dto.getHeight())
+                .note(dto.getNote())
                 .build();
     }
+
 }

@@ -30,6 +30,13 @@ public class OrderDetail {
     private Product product;
 
     private Integer quantity;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "location", column = @Column(name = "location")),
+            @AttributeOverride(name = "height", column = @Column(name = "height")),
+            @AttributeOverride(name = "note", column = @Column(name = "note"))
+    })
+    private ProductCustomization customization;
 
     @Column(name = "color", nullable = true)
     private String color;
