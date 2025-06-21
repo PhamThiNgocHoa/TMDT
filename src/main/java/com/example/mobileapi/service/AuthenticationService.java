@@ -14,7 +14,7 @@ public interface AuthenticationService {
     LoginResponse login(LoginRequest loginRequest) throws AppException;
 
     void logout(String auth) throws AppException;
-
+    boolean isTokenBlacklisted(String jwtID);
     IntrospectResponse introspect(IntrospectRequest request) throws Exception;
 
 

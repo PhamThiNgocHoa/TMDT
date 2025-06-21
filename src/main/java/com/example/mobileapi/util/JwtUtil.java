@@ -53,7 +53,7 @@ public final class JwtUtil {
                     .issueTime(Date.from(now))
                     .expirationTime(Date.from(now.plus(7, ChronoUnit.DAYS)))
                     .jwtID(UUID.randomUUID().toString())
-                    .claim("scope", Role.role(user.isRole()))
+                    .claim("scope", user.getRole())
                     .build();
 
             JWSHeader header = new JWSHeader(JWSAlgorithm.RS512);

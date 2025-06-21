@@ -3,6 +3,8 @@ package com.example.mobileapi.service.impl;
 import com.example.mobileapi.config.BCryptPasswordEncoder;
 import com.example.mobileapi.dto.request.CustomerRequestDTO;
 import com.example.mobileapi.dto.response.CustomerResponseDTO;
+import com.example.mobileapi.entity.enums.CustomerStatus;
+import com.example.mobileapi.entity.enums.Role;
 import com.example.mobileapi.event.CustomerCreatedEvent;
 import com.example.mobileapi.exception.AppException;
 import com.example.mobileapi.exception.ErrorCode;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -45,8 +48,8 @@ public class CustomerServiceImpl implements CustomerService {
         } else if (checkEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
-        // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
         request.setPassword(passwordEncoder.encode(request.getPassword())); // Sử dụng passwordEncoder
+        request.setRole(Role.USER);
 
         Customer customer = customerRepository.save(customerMapper.toCustomer(request));
         applicationEventPublisher.publishEvent(new CustomerCreatedEvent(this, customer.getId()));
@@ -102,6 +105,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Cập nhật thông tin từ DTO
+        request.setRole(Role.USER);
         customerMapper.updateCustomerFromDto(request, customer);
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
@@ -163,6 +167,28 @@ public class CustomerServiceImpl implements CustomerService {
         } else {
             throw new AppException(ErrorCode.WRONG_OLD_PASSWORD);
         }
+    }
+
+    @Override
+    @Transactional
+    public Customer findByEmailAndCreate(String email, String fullname) {
+        Optional<Customer> customer = customerRepository.findByEmail(email);
+        if (customer.isPresent()) {
+            return customer.get();
+        }
+
+
+        Customer saved = customerRepository.saveAndFlush(Customer.builder()
+                .email(email)
+                .username(email)
+                .fullname(fullname)
+                .password(passwordEncoder.encode(email))
+                .role(Role.USER)
+                .status(CustomerStatus.ACTIVE)
+                .build());
+        applicationEventPublisher.publishEvent(new CustomerCreatedEvent(this, saved.getId()));
+
+        return saved;
     }
 
 

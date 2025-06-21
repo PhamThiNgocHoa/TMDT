@@ -47,9 +47,9 @@ public class CustomerController {
 
     }
 
-    @Operation(summary = "Lấy thông tin người dùng bằng token")
-    @GetMapping("/profile")
+    // Cho phép public access
     @PreAuthorize("permitAll()")
+    @GetMapping("/profile")
     public ApiResponse<CustomerResponseDTO> getCustomerFromToken(@Parameter(hidden = true) @GetToken String token) throws AppException {
 
 

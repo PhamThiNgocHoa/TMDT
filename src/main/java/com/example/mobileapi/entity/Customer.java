@@ -1,5 +1,8 @@
 package com.example.mobileapi.entity;
 
+import com.example.mobileapi.converter.RoleConverter;
+import com.example.mobileapi.entity.enums.CustomerStatus;
+import com.example.mobileapi.entity.enums.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,7 +39,14 @@ public class Customer {
     @Column(nullable = false, name = "number_phone")
     String phone;
     // 0-customer, 1-admin
-    boolean role;
+    @Convert(converter = RoleConverter.class)
+    @Column(nullable = false, name = "role")
+    Role role;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    CustomerStatus status = CustomerStatus.ACTIVE;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     Cart cart;
