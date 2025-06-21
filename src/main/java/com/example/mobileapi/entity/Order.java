@@ -4,14 +4,12 @@ import com.example.mobileapi.entity.enums.OrderMethod;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Table(name = "orders")
 @Entity
@@ -19,8 +17,10 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(exclude = "orderDetails") // ✅ tránh vòng lặp
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
@@ -39,12 +39,14 @@ public class Order {
     String address;
 
     String numberPhone;
+
     @Enumerated(EnumType.STRING)
     OrderMethod paymentMethod;
+
     @Enumerated(EnumType.STRING)
     OrderStatus status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     List<OrderDetail> orderDetails = new ArrayList<>();
 
     String receiver;
@@ -53,9 +55,7 @@ public class Order {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Order order = (Order) o;
-
         return id != null ? id.equals(order.id) : order.id == null;
     }
 

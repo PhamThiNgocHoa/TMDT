@@ -2,10 +2,8 @@ package com.example.mobileapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Table(name = "order-details")
 @Entity
@@ -13,34 +11,35 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString(exclude = "order") // ✅ tránh vòng lặp
 public class OrderDetail {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
-    private Integer id;
+    Integer id;
 
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    Order order;
 
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    Product product;
 
-    private Integer quantity;
+    Integer quantity;
 
     @Column(name = "color", nullable = true)
-    private String color;
+    String color;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         OrderDetail that = (OrderDetail) o;
-
         return id != null ? id.equals(that.id) : that.id == null;
     }
 
@@ -49,4 +48,3 @@ public class OrderDetail {
         return id != null ? id.hashCode() : 0;
     }
 }
-
