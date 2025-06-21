@@ -11,4 +11,5 @@ public class CategoryResponseDTO {
     Integer id;
     String name;
     String img;
+    Boolean active;
 }

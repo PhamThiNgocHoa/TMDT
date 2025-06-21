@@ -11,7 +11,7 @@ import java.util.List;
 public interface CategoryService {
     CategoryResponseDTO saveCategory(CategoryRequestDTO category);
 
-    CategoryResponseDTO updateCategory(int id, CategoryRequestDTO category) throws AppException;
+    CategoryResponseDTO updateCategory(CategoryRequestDTO category) throws AppException;
 
     void deleteCategory(int id);
 
