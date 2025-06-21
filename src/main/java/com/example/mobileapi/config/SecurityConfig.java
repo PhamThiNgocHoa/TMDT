@@ -1,154 +1,163 @@
-package com.example.mobileapi.config;
+package com.example.mobileapi.config;// package vn.edu.hcmuaf.fit.fahabook.config;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Map;
 
+import com.example.mobileapi.config.SecurityExceptionHandler;
 import com.example.mobileapi.config.props.JwtProperties;
+import com.example.mobileapi.entity.Customer;
+import com.example.mobileapi.service.AuthenticationService;
+import com.example.mobileapi.service.CustomerService;
 import com.example.mobileapi.util.JwtUtil;
 import com.example.mobileapi.util.KeyUtil;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.server.resource.authentication.*;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.security.interfaces.RSAPublicKey;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
-@RequiredArgsConstructor
 @EnableWebSecurity
 @EnableMethodSecurity
-@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
 public class SecurityConfig {
-    JwtProperties props;
-    SecurityExceptionHandler exceptionHandler;
-
+    private final JwtProperties props;
+    private final AuthenticationService logoutTokenService;
+    private final SecurityExceptionHandler exceptionHandler;
+    private final CustomerService customerService;
+    @Value("${app.oauth2.redirect-uri}")
+    private String frontendRedirectUri;
     String[] acceptedEndpoint = {
-            "/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**",
-            "/swagger-resources", "/swagger-resources/**",
-            "/configuration/ui", "/configuration/security",
-            "/swagger-ui/**", "/webjars/**", "/swagger-ui.html",
-            "/api/customer/register", "/api/customer/verifyEmail",
-            "/api/customer/initPasswordReset/**", "/api/customer/resetPassword/**",
-            "/api/auth/**", "/api/customer/introspect", "/api/test/**", "/api/customer/checkUsername/**", "/api/customer/checkEmail/**",
-            "/api/category/**", "/api/product/**", "/api/product/{productId}"
-            , "/graphiql", "/graphql", "/api/graphql/product"
+            "/api/v1/auth/**",
+            "/v2/api-docs",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger-ui/**",
+            "/webjars/**",
+            "/swagger-ui.html",
+            "/api/customer/initPasswordReset/**",
+            "/api/customer/resetPassword/**",
+            "/api/auth/**",
+            "/api/customer/introspect",
+            "/api/test/**",
+            "/api/customer/checkUsername/**",
+            "/api/customer/checkEmail/**",
+            "/api/category/**",
+            "/api/product/**",
+            "/api/payments/return",
+            "/graphiql",
+            "/graphql",
+            "/api/graphql/product",
+            "/graphql-ui",
+            "/webjars/**",
+            "/api/auth/login-google", "/login-google", "/oauth2/**", "/api/v1/auth/**"
     };
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-
-
-        httpSecurity
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.oauth2ResourceServer(
+                        oauth2 ->
+                                oauth2.authenticationEntryPoint((exceptionHandler))
+                                        .accessDeniedHandler(exceptionHandler))
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtExceptionFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(exceptionHandler)
-                        .accessDeniedHandler(exceptionHandler)
-                )
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers(acceptedEndpoint)
-                                .permitAll()
-                                .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwtConfigurer ->
-                                jwtConfigurer.decoder(jwtDecoder())
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                        )
+                .sessionManagement(
+                        sm ->
+                                sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(acceptedEndpoint)
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
+                .exceptionHandling(
+
+                        ex ->
+                                ex.authenticationEntryPoint(exceptionHandler).accessDeniedHandler(exceptionHandler))
+                .oauth2ResourceServer(
+                        oauth2 ->
+                                oauth2.jwt(
+                                        jwt ->
+                                                jwt.decoder(
+                                                        jwtDecoder()
+                                                ).jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(
+                                authz ->
+                                        authz.baseUri("/oauth2/authorize"))
+                        .redirectionEndpoint(
+                                redir -> redir.baseUri("/login/oauth2/code/*"))
+                        .successHandler(oAuth2SuccessHandler())
+
+
                 );
-
-
-        return httpSecurity.build();
-    }
-
-
-    @Bean
-    CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
+        return http.build();
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter jGA = new JwtGrantedAuthoritiesConverter();
-        jGA.setAuthorityPrefix("ROLE_");
-        JwtAuthenticationConverter jAC = new JwtAuthenticationConverter();
-        jAC.setJwtGrantedAuthoritiesConverter(jGA);
-        return jAC;
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter gaConverter = new JwtGrantedAuthoritiesConverter();
+        gaConverter.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter conv = new JwtAuthenticationConverter();
+        conv.setJwtGrantedAuthoritiesConverter(gaConverter);
+        return conv;
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        RSAPublicKey publicKey = KeyUtil.parsePublicKey(props.keys().publicKey());
-        return NimbusJwtDecoder
-                .withPublicKey(publicKey)
+        RSAPublicKey pubKey = KeyUtil.parsePublicKey(props.keys().publicKey());
+
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey(pubKey)
                 .signatureAlgorithm(SignatureAlgorithm.RS512)
                 .build();
+
+        OAuth2TokenValidator<Jwt> defaultValidator = JwtValidators.createDefaultWithIssuer(props.issuer());
+
+        OAuth2TokenValidator<Jwt> blacklistValidator = new JwtBlacklistValidator(logoutTokenService);
+
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(defaultValidator, blacklistValidator));
+        return decoder;
     }
 
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public OncePerRequestFilter jwtExceptionFilter() {
+    private AuthenticationSuccessHandler oAuth2SuccessHandler() {
+        return (request, response, authentication) -> {
+            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+            Map<String, Object> attrs = oauth2User.getAttributes();
+            String email = (String) attrs.get("email");
+            String name = (String) attrs.get("name");
 
+            // Tìm hoặc tạo tài khoản người dùng từ email
+            Customer customer = customerService.findByEmailAndCreate(email, name);
 
-        return new OncePerRequestFilter() {
-            private static final String ATTR = "jwtError";
+            // Sinh JWT token
+            String token = JwtUtil.generateToken(customer);
 
-            @Override
-            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-                String token = JwtUtil.resolveToken(request);
-                if (token != null) {
-                    try {
-                        jwtDecoder().decode(token);
-                        if (JwtUtil.isLogout(token)) request.setAttribute(ATTR, "LOGOUT");
+            // ✅ Dùng redirect-uri đã cấu hình
+            String redirectUrl = frontendRedirectUri + "?token=" + token;
 
-
-                    } catch (JwtException e) {
-                        String msg = e.getMessage().toLowerCase();
-                        if (msg.contains("expired")) request.setAttribute(ATTR, "EXPIRED");
-                        else if
-                        (msg.contains("signature")) request.setAttribute(ATTR, "INVALID_SIGNATURE");
-                        else if
-                        (msg.contains("unsupported")) request.setAttribute(ATTR, "UNSUPPORTED");
-                        else
-                            request.setAttribute(ATTR, "INVALID");
-                        throw new BadCredentialsException("JWT invalid");
-
-
-                    }
-                }
-                filterChain.doFilter(request, response);
-            }
+            // ✅ Redirect về frontend
+            response.sendRedirect(redirectUrl);
         };
     }
+
+
 
 }

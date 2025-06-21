@@ -3,6 +3,7 @@ package com.example.mobileapi.service;
 
 import com.example.mobileapi.dto.request.CustomerRequestDTO;
 import com.example.mobileapi.dto.response.CustomerResponseDTO;
+import com.example.mobileapi.entity.Customer;
 import com.example.mobileapi.exception.AppException;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public interface CustomerService {
 
     void changePassword(int customerId, String oldPassword, String newPassword) throws AppException;
 
+    Customer findByEmailAndCreate(String email, String fullname);
 
     CustomerResponseDTO getCustomerProfile(String token) throws AppException;
 

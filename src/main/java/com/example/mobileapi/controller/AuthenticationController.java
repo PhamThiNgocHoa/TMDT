@@ -22,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Slf4j
 @RestController
@@ -42,12 +43,14 @@ public class AuthenticationController {
                 .data(authenticationService.login(loginRequest))
                 .build();
     }
+    @GetMapping("/login-google")
+    public RedirectView redirectToGoogle() {
+        return new RedirectView("/oauth2/authorize/google");
+    }
 
     @PostMapping("/introspect")
     public IntrospectResponse authenticate(@RequestBody IntrospectRequest request) throws Exception {
         return authenticationService.introspect(request);
-
-
     }
 
     @PostMapping("/logout")

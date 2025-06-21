@@ -1,5 +1,6 @@
 package com.example.mobileapi.dto.request;
 
+import com.example.mobileapi.entity.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -26,5 +27,7 @@ public class CustomerRequestDTO {
 
     @NotBlank(message = "MISSING_PHONE")
     String phone;
+
+    Role role;
 
 }

@@ -57,9 +57,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build());
 
     }
+    @Override
+    public boolean isTokenBlacklisted(String jwtID) {
+        return invalidateTokenRepository.existsById(jwtID);
+    }
 
     @Override
-    public IntrospectResponse introspect(IntrospectRequest request) {
+    public IntrospectResponse introspect(IntrospectRequest request) throws Exception {
         return null;
     }
 }
