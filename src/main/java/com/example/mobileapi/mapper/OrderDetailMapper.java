@@ -8,14 +8,16 @@ import org.mapstruct.Mapping;
 import java.util.List;
 
 @Mapper(componentModel = "spring",
-        uses = ProductMapper.class)
+        uses = {ProductMapper.class, ProductCustomizationMapper.class})
 public interface OrderDetailMapper {
     OrderDetail toOrderDetail(OrderDetailResponseDTO dto);
 
     @Mapping(source = "order.id", target = "orderId")
     @Mapping(source = "product", target = "productResponseDTO")
     @Mapping(source = "color", target = "color")
+    @Mapping(source = "customization", target = "customization")
     OrderDetailResponseDTO toOrderDetailResponseDTO(OrderDetail orderDetail);
 
     List<OrderDetailResponseDTO> toOrderDetailResponseDTOList(List<OrderDetail> orderDetails);
 }
+

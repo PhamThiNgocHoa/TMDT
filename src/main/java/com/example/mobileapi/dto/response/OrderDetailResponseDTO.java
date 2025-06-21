@@ -1,5 +1,6 @@
 package com.example.mobileapi.dto.response;
 
+import com.example.mobileapi.dto.ProductCustomizationDTO;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,5 +20,6 @@ public class OrderDetailResponseDTO {
     ProductResponseDTO productResponseDTO;
     Integer quantity;
     String color;
+    ProductCustomizationDTO customization;
 
 }
