@@ -25,11 +25,14 @@ public class Category {
     Integer id;
 
     @Column(nullable = false)
-    String name;  // Tên danh mục sản phẩm
+    String name;
 
     @Column(nullable = false)
-    String img;   // Hình ảnh của danh mục sản phẩm
+    String img;
+
+    @Column(nullable = false)
+    Boolean active = true;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    List<Product> products = new ArrayList<>();  // Danh sách sản phẩm trong danh mục
+    List<Product> products = new ArrayList<>();
 }

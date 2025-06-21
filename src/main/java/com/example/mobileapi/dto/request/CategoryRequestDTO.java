@@ -14,4 +14,6 @@ public class CategoryRequestDTO {
     String name;
     @NotBlank(message = "Mô tả không được để trống")
     String img;
+    Boolean active;
+
 }

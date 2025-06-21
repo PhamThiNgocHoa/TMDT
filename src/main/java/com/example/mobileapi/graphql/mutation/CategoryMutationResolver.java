@@ -13,6 +13,8 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
+import java.util.UUID;
+
 @Controller
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -27,9 +29,9 @@ public class CategoryMutationResolver {
     }
 
     @MutationMapping
-    public CategoryResponseDTO updateCategory(@Argument("id") int id, @Valid @Argument("input") CategoryRequestDTO category) throws AppException {
-        return categoryService.updateCategory(id, category);
-
+    public CategoryResponseDTO updateCategory(
+            @Argument("id") int id, @Valid @Argument("input") CategoryRequestDTO category) throws AppException {
+        return categoryService.updateCategory(category);
     }
 
     @MutationMapping

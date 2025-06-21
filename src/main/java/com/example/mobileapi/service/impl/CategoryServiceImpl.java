@@ -28,25 +28,29 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryResponseDTO saveCategory(CategoryRequestDTO dto) {
         Category category = categoryMapper.toCategory(dto);
+        category.setActive(true);
+        category = categoryRepository.save(category);
         return categoryMapper.toCategoryResponseDTO(category);
     }
 
     @Override
-    public CategoryResponseDTO updateCategory(int id, CategoryRequestDTO dto) throws AppException {
+    public CategoryResponseDTO updateCategory(CategoryRequestDTO dto) throws AppException {
         if (!categoryRepository.existsById(dto.getId())) {
             throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
-
         }
         Category entity = categoryMapper.toCategory(dto);
-        entity.setId(id);
-        return categoryMapper.toCategoryResponseDTO(
-                categoryRepository.save(entity));
+        return categoryMapper.toCategoryResponseDTO(categoryRepository.save(entity));
     }
 
     @Override
     public void deleteCategory(int id) {
-        categoryRepository.deleteById(id);
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        category.setActive(false);
+        categoryRepository.save(category);
     }
+
 
     @Override
     public CategoryResponseDTO getCategory(int id) throws AppException {
@@ -61,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResponseDTO> getAllCategories() {
-        List<Category> categories = categoryRepository.findAll();
+        List<Category> categories = categoryRepository.findAllByActiveTrue(); // chỉ lấy loại còn hoạt động
         List<CategoryResponseDTO> categoriesResponseDTO = new ArrayList<>();
         for (Category category : categories) {
             categoriesResponseDTO.add(CategoryResponseDTO.builder()
