@@ -1,11 +1,13 @@
 package com.example.mobileapi.controller;
 
+import com.example.mobileapi.dto.request.CategoryRequestDTO;
 import com.example.mobileapi.dto.response.*;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.CustomerRequestDTO;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
 import com.example.mobileapi.exception.AppException;
 import com.example.mobileapi.service.AdminService;
+import com.example.mobileapi.service.CategoryService;
 import com.example.mobileapi.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,11 +16,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RestController
@@ -69,6 +77,33 @@ public class AdminController {
     public ApiResponse<Void> deleteCustomer(@PathVariable int customerId) {
         adminService.deleteCustomer(customerId);
         return ApiResponse.success("Xóa người dùng thành công");
+    }
+
+    CategoryService categoryService;
+
+    @Operation(summary = "Thêm danh mục")
+    @PostMapping("/category")
+    public ApiResponse<CategoryResponseDTO> addCategory(@Valid @RequestBody CategoryRequestDTO categoryRequestDTO) {
+        return ApiResponse.<CategoryResponseDTO>builder()
+                .data(categoryService.saveCategory(categoryRequestDTO))
+                .build();
+    }
+
+    @Operation(summary = "Cập nhật danh mục")
+    @PutMapping("/category")
+    public ApiResponse<CategoryResponseDTO> updateCategory(
+            @Valid @RequestBody CategoryRequestDTO categoryRequestDTO
+    ) {
+        return ApiResponse.<CategoryResponseDTO>builder()
+                .data(categoryService.updateCategory(categoryRequestDTO))
+                .build();
+    }
+
+    @Operation(summary = "Xóa danh mục")
+    @DeleteMapping("/category/{id}")
+    public ApiResponse<Void> deleteCategory(@PathVariable int id) {
+        categoryService.deleteCategory(id);
+        return ApiResponse.success("Xóa danh mục thành công");
     }
 
     OrderService orderService;
