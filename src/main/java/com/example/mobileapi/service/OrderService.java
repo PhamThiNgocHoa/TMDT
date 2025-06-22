@@ -4,14 +4,13 @@ import com.example.mobileapi.dto.response.RevenueResponse;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
 import com.example.mobileapi.dto.request.OrderRequestDTO;
-import com.example.mobileapi.dto.response.MonthlyRevenueResponse;
 import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.exception.AppException;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 public interface OrderService {
     int saveOrder(OrderRequestDTO orderRequestDTO) throws AppException;
@@ -30,12 +29,13 @@ public interface OrderService {
 
     void editOrder(int id, OrderEditRequestDTO orderEditRequestDTO) throws AppException;
 
-    List<MonthlyRevenueResponse> getMonthlyRevenue();
+    List<RevenueResponse> getMonthlyRevenue();
 
     List<OrderResponseDTO> getOrdersByStatus(OrderStatus status);
 
     void changeOrderStatus(int orderId, OrderStatus status) throws AppException;
 
+    @PreAuthorize("@customerServiceImpl.getCustomerIdByUsername(authentication.name) == #customerId")
     List<OrderResponseDTO> getOrdersByStatusAndCustomerId(OrderStatus status, int customerId);
 
     boolean existById(Integer orderId);

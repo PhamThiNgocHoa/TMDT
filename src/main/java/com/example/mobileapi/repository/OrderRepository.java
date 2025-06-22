@@ -14,29 +14,13 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByCustomerId(int customerId);
-    List<Order> findAllByOrderDateBetween(LocalDateTime orderDateAfter, LocalDateTime orderDateBefore);
 
-    @Query(value = "SELECT\n" +
-            "    months.Month AS Month,\n" +
-            "    COALESCE(SUM(orders.total_amount), 0) AS Monthly_Revenue\n" +
-            "FROM\n" +
-            "    (SELECT 1 AS Month UNION SELECT 2 UNION SELECT 3 UNION SELECT 4\n" +
-            "     UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8\n" +
-            "     UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12) AS months\n" +
-            "LEFT JOIN\n" +
-            "    orders ON months.Month = MONTH(orders.order_date)\n" +
-            "          AND YEAR(orders.order_date) = YEAR(CURDATE())\n" +
-            "GROUP BY\n" +
-            "    months.Month\n" +
-            "ORDER BY\n" +
-            "    months.Month;", nativeQuery = true)
-    List<Object[]> getMonthlyRevenue();
+    List<Order> findByStatusAndCustomer_Id(OrderStatus status, int customerId);
+
+    List<Order> findByStatus(OrderStatus status);
 
     @Query("SELECT o.totalAmount FROM Order o WHERE o.id = ?1")
     BigDecimal findTotalAmountByOrderId(int orderId);
 
-
-    List<Order> findByStatusAndCustomerId(OrderStatus status, Integer customer_id);
-
-    List<Order> findByStatus(OrderStatus status);
+    List<Order> findAllByOrderDateBetween(LocalDateTime orderDateAfter, LocalDateTime orderDateBefore);
 }

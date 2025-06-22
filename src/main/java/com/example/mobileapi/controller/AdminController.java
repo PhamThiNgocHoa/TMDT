@@ -110,9 +110,9 @@ public class AdminController {
 
     @GetMapping("/order/revenue")
     @Operation(summary = "Lấy doanh thu theo tháng")
-    public ApiResponse<List<MonthlyRevenueResponse>> getOrderRevenue() {
+    public ApiResponse<List<RevenueResponse>> getOrderRevenue() {
 
-        return ApiResponse.<List<MonthlyRevenueResponse>>builder()
+        return ApiResponse.<List<RevenueResponse>>builder()
                 .data(orderService.getMonthlyRevenue())
                 .build();
     }
@@ -138,7 +138,7 @@ public class AdminController {
 
     @GetMapping("/order/revenue/date/{date}")
     @Operation(summary = "Lấy doanh thu theo ngày")
-    public ApiResponse<RevenueResponse> getOrderRevenueAtYear(@PathVariable("date") LocalDate date) {
+    public ApiResponse<RevenueResponse> getOrderRevenueDate(@PathVariable("date") LocalDate date) {
 
         return ApiResponse.<RevenueResponse>builder()
                 .data(orderService.getRevenueByDate(date))
