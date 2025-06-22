@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 @Tag(name = "Admin", description = "Admin API")
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 public class AdminController {
     AdminService adminService;
 
@@ -196,4 +196,3 @@ public class AdminController {
 
 
 }
-
