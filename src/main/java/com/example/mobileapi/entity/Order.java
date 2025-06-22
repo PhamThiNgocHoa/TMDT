@@ -4,12 +4,10 @@ import com.example.mobileapi.entity.enums.OrderMethod;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -18,7 +16,8 @@ import java.util.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class Order {
     @Id
@@ -34,14 +33,16 @@ public class Order {
     LocalDateTime orderDate;
 
     @Column(name = "total_amount", nullable = false)
-    Double totalAmount;
+    BigDecimal totalAmount;
 
     String address;
 
     String numberPhone;
     @Enumerated(EnumType.STRING)
     OrderMethod paymentMethod;
+
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     OrderStatus status;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)

@@ -2,7 +2,9 @@ package com.example.mobileapi.entity.enums;
 
 public enum Role {
     ADMIN(1),
-    USER(0);
+    USER(0),
+    STAFF(2);
+
 
     private final int value;
 
