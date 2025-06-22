@@ -189,8 +189,8 @@ public class OrderServiceImpl implements OrderService {
 
         for (Object[] row : monthlyData) {
             int month = (int) row[0];
-            BigDecimal value = (BigDecimal) row[1];
-            long revenue = value.longValueExact();
+            Double value = (Double) row[1];
+            long revenue = value != null ? value.longValue() : 0L;
             responseList.add(MonthlyRevenueResponse.builder().month(month).revenue(revenue).build());
         }
 
