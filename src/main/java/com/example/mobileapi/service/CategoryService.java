@@ -22,4 +22,6 @@ public interface CategoryService {
     CategoryResponseDTO getCategoryById(int categoryId) throws AppException;
 
     Category getCategoryByName(String name) throws AppException;
+
+    Category getCategoryEntityById(int id) throws AppException;
 }

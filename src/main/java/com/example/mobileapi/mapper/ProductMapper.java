@@ -8,11 +8,15 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ProductColorMapper.class, ProductSizeMapper.class, ImageMapper.class, ProductSpecificationMapper.class})
 public interface ProductMapper {
 
     @Mapping(source = "categoryId", target = "category.id")
     @Mapping(source = "discount", target = "discount")
+    @Mapping(target = "productColors", source = "productColors")
+    @Mapping(target = "productSizes", source = "productSizes")
+    @Mapping(target = "productImages", source = "productImages")
+    @Mapping(target = "productSpecifications", source = "productSpecifications")
     Product toProduct(ProductRequestDTO dto);
 
     Product toProduct(ProductResponseDTO dto);

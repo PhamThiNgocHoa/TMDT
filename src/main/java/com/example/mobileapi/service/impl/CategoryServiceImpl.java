@@ -92,5 +92,10 @@ public class CategoryServiceImpl implements CategoryService {
                         .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
+    @Override
+    public Category getCategoryEntityById(int id) throws AppException {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
 
 }
