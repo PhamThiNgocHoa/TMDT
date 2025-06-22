@@ -31,4 +31,5 @@ public class ProductSpecification {
 
     @Column(nullable = false)
     String value;  // Giá trị của thông số kỹ thuật (ví dụ: 'Intel i7', '16GB', '512GB SSD')
+
 }
