@@ -7,20 +7,19 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Table(name = "orders")
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@ToString(exclude = "orderDetails") // ✅ tránh vòng lặp
+@Getter
+@Setter
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class Order {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
@@ -34,19 +33,19 @@ public class Order {
     LocalDateTime orderDate;
 
     @Column(name = "total_amount", nullable = false)
-    Double totalAmount;
+    BigDecimal totalAmount;
 
     String address;
 
     String numberPhone;
-
     @Enumerated(EnumType.STRING)
     OrderMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     OrderStatus status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     List<OrderDetail> orderDetails = new ArrayList<>();
 
     String receiver;
@@ -55,7 +54,9 @@ public class Order {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Order order = (Order) o;
+
         return id != null ? id.equals(order.id) : order.id == null;
     }
 

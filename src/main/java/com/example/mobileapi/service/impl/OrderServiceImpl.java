@@ -8,7 +8,6 @@ import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
 import com.example.mobileapi.dto.request.OrderRequestDTO;
 import com.example.mobileapi.dto.request.OrderDetailRequestDTO;
-import com.example.mobileapi.dto.response.MonthlyRevenueResponse;
 import com.example.mobileapi.dto.response.OrderResponseDTO;
 import com.example.mobileapi.dto.response.OrderDetailResponseDTO;
 import com.example.mobileapi.entity.enums.StockAction;
@@ -36,7 +35,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.mobileapi.entity.enums.OrderStatus.DELIVERED;
@@ -64,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
                 .customer(customerRepository.findById(orderRequestDTO.getCustomerId())
                         .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)))
                 .orderDate(LocalDateTime.now())
-                .totalAmount(totalAmount) // Gán tổng tiền đã tính
+                .totalAmount(BigDecimal.valueOf(totalAmount))
                 .address(orderRequestDTO.getAddress())
                 .numberPhone(orderRequestDTO.getNumberPhone())
                 .receiver(orderRequestDTO.getReceiver())
@@ -141,7 +139,7 @@ public class OrderServiceImpl implements OrderService {
     public void updateOrder(int id, OrderRequestDTO orderRequestDTO) {
         Order order = getOrderById(id);
         if (order != null) {
-            order.setTotalAmount(orderRequestDTO.getTotalAmount());
+            order.setTotalAmount(BigDecimal.valueOf(orderRequestDTO.getTotalAmount()));
             order.setAddress(orderRequestDTO.getAddress());
             order.setNumberPhone(orderRequestDTO.getNumberPhone());
             order.setStatus(orderRequestDTO.getStatus());
@@ -183,18 +181,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<MonthlyRevenueResponse> getMonthlyRevenue() {
-        List<Object[]> monthlyData = orderRepository.getMonthlyRevenue();
-        List<MonthlyRevenueResponse> responseList = new ArrayList<>();
+    public List<RevenueResponse> getMonthlyRevenue() {
+        List<RevenueResponse> monthlyRevenues = new ArrayList<>();
+        for (int month = 1; month <= 12; month++) {
 
-        for (Object[] row : monthlyData) {
-            int month = (int) row[0];
-            Double value = (Double) row[1];
-            long revenue = value != null ? value.longValue() : 0L;
-            responseList.add(MonthlyRevenueResponse.builder().month(month).revenue(revenue).build());
+            monthlyRevenues.add(getRevenueByMonth(month, LocalDate.now().getYear()));
         }
-
-        return responseList;
+        return monthlyRevenues;
     }
 
     @Override
@@ -214,10 +207,12 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 
-    @Override
+
+
     @PreAuthorize("@customerServiceImpl.getCustomerIdByUsername(authentication.name) == #customerId")
+    @Override
     public List<OrderResponseDTO> getOrdersByStatusAndCustomerId(OrderStatus status, int customerId) {
-        List<Order> orderResponseDTO = orderRepository.findByStatusAndCustomerId(status, customerId);
+        List<Order> orderResponseDTO = orderRepository.findByStatusAndCustomer_Id(status, customerId);
         if (orderResponseDTO.isEmpty()) {
             return Collections.emptyList();
         }
@@ -233,25 +228,25 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public RevenueResponse getRevenueByMonth(int month, int year) {
-        if (month < 1 || month > 12 || year < 2000 || year > LocalDate.now().getYear()) {
+        if (month < 1 || month > 12) {
+            throw new AppException(ErrorCode.INVALID_TIME);
+        }
+        if (year < 2000 || year > LocalDate.now().getYear()) {
             throw new AppException(ErrorCode.INVALID_TIME);
         }
 
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
-
-        BigDecimal revenue = orderRepository.findAllByOrderDateBetween(startDateTime, endDateTime).stream()
+        LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
+        LocalDateTime endOfMonth = startOfMonth
+                .withDayOfMonth(startOfMonth.toLocalDate().lengthOfMonth())
+                .withHour(23)
+                .withMinute(59)
+                .withSecond(59);
+        List<Order> order = orderRepository.findAllByOrderDateBetween(startOfMonth, endOfMonth).stream()
                 .filter(o -> o.getStatus() == DELIVERED)
-                .map(o -> BigDecimal.valueOf(o.getTotalAmount()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+                .toList();
         return RevenueResponse.builder()
                 .month(month)
-                .year(year)
-                .revenue(revenue)
+                .revenue(order.stream().map(Order::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add))
                 .build();
     }
 
@@ -261,23 +256,18 @@ public class OrderServiceImpl implements OrderService {
         if (year < 2000 || year > LocalDate.now().getYear()) {
             throw new AppException(ErrorCode.INVALID_TIME);
         }
-
         LocalDateTime startOfYear = LocalDate.of(year, 1, 1).atStartOfDay();
-        LocalDateTime endOfYear = LocalDate.of(year, 12, 31).atTime(23, 59, 59);
+        LocalDateTime endOfYear = startOfYear.plusYears(1).minusNanos(1);
 
         BigDecimal revenue = orderRepository.findAllByOrderDateBetween(startOfYear, endOfYear).stream()
-                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
-                .map(o -> BigDecimal.valueOf(o.getTotalAmount()))
+                .filter(order -> order.getStatus() == DELIVERED)
+                .map(Order::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return RevenueResponse.builder()
-                .year(year)
-                .revenue(revenue)
-                .build();
+        return RevenueResponse.builder().year(year).revenue(revenue).build();
     }
 
 
-    @Override
+
     public RevenueResponse getRevenueByDate(LocalDate date) {
         LocalDateTime startOfDay = date.atStartOfDay(); // 00:00:00
         LocalDateTime endOfDay = date.atTime(23, 59, 59); // 23:59:59
@@ -286,7 +276,7 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal revenue = orders.stream()
                 .filter(o -> o.getStatus() == DELIVERED)
-                .map(o -> BigDecimal.valueOf(o.getTotalAmount()))
+                .map(Order::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return RevenueResponse.builder()
@@ -296,7 +286,6 @@ public class OrderServiceImpl implements OrderService {
                 .revenue(revenue)
                 .build();
     }
-
 
     public List<OrderResponseDTO> getOrdersByCustomerId(int customerId) {
         List<Order> orders = orderRepository.findByCustomerId(customerId);
@@ -363,3 +352,4 @@ public class OrderServiceImpl implements OrderService {
     }
 
 }
+

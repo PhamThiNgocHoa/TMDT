@@ -1,5 +1,6 @@
 package com.example.mobileapi.service.impl;
 
+import com.example.mobileapi.dto.response.RevenueResponse;
 import com.example.mobileapi.entity.enums.OrderStatus;
 import com.example.mobileapi.dto.request.CustomerRequestDTO;
 import com.example.mobileapi.dto.request.OrderEditRequestDTO;
@@ -79,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<MonthlyRevenueResponse> getMonthlyRevenue() {
+    public List<RevenueResponse> getMonthlyRevenue() {
         return orderService.getMonthlyRevenue();
     }
 
